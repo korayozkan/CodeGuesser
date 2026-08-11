@@ -123,11 +123,41 @@ export async function loadProfile(userId) {
         .from('profiles')
         .select('username, score, title, jokers, active_theme, active_frame')
         .eq('id', userId)
-        .single();
+        .maybeSingle();   // .single() yerine: kayıt yoksa 406 değil null döner
 
+    // Tablo yoksa veya henüz migration çalıştırılmamışsa
     if (error) {
-        showToast('Profil yüklenemedi: ' + error.message, 'error');
+        console.error('[auth] loadProfile hatası:', error.message, error.code);
+
+        // 406 → tablo yok / migration çalıştırılmamış
+        if (error.code === '42P01' || error.message?.includes('406') || error.message?.includes('relation')) {
+            showToast('⚠️ Veritabanı tabloları bulunamadı. Supabase migration\'larını çalıştır.', 'error', 8000);
+        } else {
+            showToast('Profil yüklenemedi: ' + error.message, 'error');
+        }
         return null;
+    }
+
+    // Profil henüz oluşturulmamış (yeni kullanıcı, trigger gecikmiş olabilir)
+    if (!data) {
+        console.warn('[auth] Profil bulunamadı, 1 sn sonra tekrar deneniyor...');
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: retryData, error: retryError } = await supabase
+            .from('profiles')
+            .select('username, score, title, jokers, active_theme, active_frame')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (retryError || !retryData) {
+            showToast('Profil oluşturulamadı. Lütfen sayfayı yenile.', 'error');
+            return null;
+        }
+
+        currentProfile = retryData;
+        renderProfileUI(retryData);
+        applyTheme(retryData.active_theme);
+        return retryData;
     }
 
     currentProfile = data;
