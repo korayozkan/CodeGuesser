@@ -16,7 +16,6 @@
  */
 
 import { supabase, SUPABASE_URL } from './config.js';
-import { shuffle }                from './ui-utils.js';
 
 // ─── Edge Function URL'leri ────────────────────────────────────
 // SUPABASE_URL örn: https://thvzcnmiwekudevxjnfg.supabase.co
@@ -158,11 +157,11 @@ export async function getDuelQuestions(seed, count = 15) {
     const questions = [];
     const localSeen = new Set();
 
-    for (let i = 0; i < count; i++) {
-        const token = await _getToken();
-        if (!token) break;
+    // Token bir kez al — 15 istek için tekrar tekrar getSession() çağırma
+    const token = await _getToken();
+    if (!token) return [];
 
-        // Zorluk: ilk 5 kolay, ortа karışık, son 5 zor
+    for (let i = 0; i < count; i++) {
         const difficulty = i < 5 ? 1 : i < 10 ? 3 : 5;
 
         const response = await fetch(GET_QUESTION_URL, {
@@ -184,7 +183,6 @@ export async function getDuelQuestions(seed, count = 15) {
         questions.push(q);
     }
 
-    // Seed ile deterministik sıralama (iki oyuncunun aynı sırayı görmesi için)
     return _seededShuffle(questions, seed);
 }
 

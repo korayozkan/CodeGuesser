@@ -241,19 +241,26 @@ export function initAuth() {
 
     // Supabase oturum değişikliklerini dinle
     supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            currentUser = session.user;
+        // TOKEN_REFRESHED → kullanıcıyı güncelle ama ekran değiştirme / yeni abonelik açma
+        if (event === 'TOKEN_REFRESHED') {
+            if (session) currentUser = session.user;
+            return;
+        }
 
-            // Profil yükle ve menüyü göster
+        if (event === 'SIGNED_IN') {
+            currentUser = session.user;
             const profile = await loadProfile(session.user.id);
             if (profile) {
                 showScreen(menuScreen);
-                initLeaderboard(session.user.id);   // Realtime lider tablosu başlat
+                if (!_leaderboardInitialized) {
+                    _leaderboardInitialized = true;
+                    initLeaderboard(session.user.id);
+                }
             }
-
         } else if (event === 'SIGNED_OUT') {
-            currentUser    = null;
-            currentProfile = null;
+            currentUser             = null;
+            currentProfile          = null;
+            _leaderboardInitialized = false;   // Tekrar giriş yapılınca yeniden init edilsin
             showScreen(authScreen);
         }
     });
@@ -261,6 +268,9 @@ export function initAuth() {
     // Sayfa yüklendiğinde mevcut oturumu kontrol et
     _checkExistingSession();
 }
+
+// Leaderboard'un tek seferlik başlatıldığını takip eden bayrak
+let _leaderboardInitialized = false;
 
 /**
  * Sayfa yüklendiğinde zaten aktif bir oturum var mı kontrol eder.
@@ -275,10 +285,12 @@ async function _checkExistingSession() {
         const profile = await loadProfile(session.user.id);
         if (profile) {
             showScreen(menuScreen);
-            initLeaderboard(session.user.id);
+            if (!_leaderboardInitialized) {
+                _leaderboardInitialized = true;
+                initLeaderboard(session.user.id);
+            }
         }
     } else {
-        // Oturum yoksa auth ekranını göster
         showScreen(authScreen);
     }
 }
