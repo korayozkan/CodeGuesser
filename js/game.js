@@ -194,9 +194,15 @@ async function _loadQuestion(isBonusOverride) {
     _stopTimer();
     state.isAnswerLocked  = false;
     state.isBonusQuestion = isBonusOverride;
+    state.currentQuestion = null;   // Yükleme süresince null — tıklama guard'ı çalışsın
 
-    // Tüm şık butonlarını sıfırla
+    // Soru yüklenene kadar butonları kilitle ve skeleton göster
     _resetOptionButtons();
+    optionButtons.forEach(btn => {
+        btn.disabled    = true;
+        btn.textContent = '...';
+    });
+    codeSnippet.textContent = 'Yükleniyor...';
 
     const question = await getNextQuestion();
 
@@ -250,12 +256,14 @@ async function _loadQuestion(isBonusOverride) {
  * @param {MouseEvent} e
  */
 async function _handleOptionClick(e) {
-    if (state.isAnswerLocked || !state.isRunning) return;
+    if (!state.currentQuestion || state.isAnswerLocked || !state.isRunning) return;
     state.isAnswerLocked = true;
 
     _stopTimer();
 
-    const selectedLang = e.currentTarget.dataset.lang;
+    // currentTarget async bekleme sırasında null'a düşer — hemen sakla
+    const clickedBtn   = e.currentTarget;
+    const selectedLang = clickedBtn.dataset.lang;
     const questionId   = state.currentQuestion.id;
 
     // Tüm butonları geçici olarak kilitle (sunucu cevabını beklerken)
@@ -277,7 +285,7 @@ async function _handleOptionClick(e) {
     const correctLang = result.correct_lang;   // Sunucudan geldi
 
     // Doğru/yanlış görsel geri bildirimi
-    _highlightAnswer(e.currentTarget, isCorrect, correctLang);
+    _highlightAnswer(clickedBtn, isCorrect, correctLang);
     showAnswerEffect(isCorrect);
 
     if (isCorrect) {

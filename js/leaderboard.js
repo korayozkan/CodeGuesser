@@ -46,9 +46,15 @@ let lastKnownRank = null;
  * @param {string} userId - Oturum açmış kullanıcının UUID'si
  */
 export function initLeaderboard(userId) {
+    // Zaten başlatıldıysa sadece userId güncelle, listener/kanal tekrar açma
+    if (currentUserId) {
+        currentUserId = userId;
+        return;
+    }
+
     currentUserId = userId;
 
-    // Lider tablosu aç butonu
+    // Lider tablosu aç butonu — tek seferlik listener
     btnOpenLeaderboard.addEventListener('click', () => {
         openModal('leaderboard-modal');
         _loadLeaderboard(activeTab);

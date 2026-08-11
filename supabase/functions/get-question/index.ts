@@ -63,10 +63,18 @@ Deno.serve(async (req: Request) => {
         }
 
         // ── 3. Sunucu tarafında soru çek (service_role) ────────
-        // service_role → RLS bypass → sorular güvenle çekilir
+        // Önce SERVICE_ROLE_KEY, yoksa SUPABASE_SERVICE_ROLE_KEY'i dene
+        const serviceKey = Deno.env.get('SERVICE_ROLE_KEY')
+                        ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+        if (!serviceKey) {
+            console.error('[get-question] SERVICE_ROLE_KEY secret tanımlı değil!');
+            return _error('Sunucu yapılandırma hatası: SERVICE_ROLE_KEY eksik.', 500);
+        }
+
         const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL')!,
-            Deno.env.get('SERVICE_ROLE_KEY')!,
+            serviceKey,
         );
 
         // Görülmemiş soruları filtrele
