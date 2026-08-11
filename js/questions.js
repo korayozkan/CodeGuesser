@@ -18,121 +18,84 @@
 import { supabase, SUPABASE_URL } from './config.js';
 
 // ─── Edge Function URL'leri ────────────────────────────────────
-// SUPABASE_URL örn: https://thvzcnmiwekudevxjnfg.supabase.co
 const EDGE_BASE        = `${SUPABASE_URL}/functions/v1`;
 const GET_QUESTION_URL = `${EDGE_BASE}/get-question`;
 const CHECK_ANSWER_URL = `${EDGE_BASE}/check-answer`;
 
 // ─── Sabitler ──────────────────────────────────────────────────
-/** Kaç doğru cevapta bir zorluk seviyesi artar */
 const DIFFICULTY_STEP_INTERVAL = 3;
+/** Arka planda önceden kaç soru yüklensin */
+const PREFETCH_SIZE = 5;
 
 // ─── Modül Durumu ──────────────────────────────────────────────
-/** Bu oyun oturumunda gösterilen soru id'leri */
 const seenIds = new Set();
-
-/** Mevcut zorluk seviyesi (1–5) */
 let currentDifficulty = 1;
+let correctInLevel    = 0;
 
-/** Bu zorluk seviyesinde kaç doğru cevap verildi */
-let correctInLevel = 0;
+/** Ön yüklenmiş soru kuyruğu — kullanıcı beklemeden alır */
+const questionQueue = [];
+
+/** Şu an arka planda prefetch yapılıyor mu */
+let isPrefetching = false;
 
 // ─── Dışa Açık API ─────────────────────────────────────────────
 
-/**
- * Soru motorunu sıfırlar. Her yeni oyun başında çağrılır.
- */
 export function resetQuestions() {
     seenIds.clear();
     currentDifficulty = 1;
     correctInLevel    = 0;
+    questionQueue.length = 0;
+    isPrefetching     = false;
 }
 
-/**
- * Mevcut zorluk seviyesini döner.
- * @returns {number} 1–5
- */
-export function getDifficulty() {
-    return currentDifficulty;
-}
+export function getDifficulty() { return currentDifficulty; }
 
-/**
- * Oyuncunun doğru cevap verdiğini bildirir.
- * Gerekirse zorluk seviyesini artırır.
- * @returns {boolean} Zorluk arttıysa true
- */
 export function registerCorrectAnswer() {
     correctInLevel++;
     if (correctInLevel >= DIFFICULTY_STEP_INTERVAL && currentDifficulty < 5) {
         currentDifficulty++;
         correctInLevel = 0;
+        // Zorluk değişti — kuyruktaki soruları temizle (yanlış zorluk olabilir)
+        questionQueue.length = 0;
         return true;
     }
     return false;
 }
 
 /**
- * Edge Function'dan bir sonraki soruyu çeker.
- * correct_lang sunucuda kalır, istemciye gelmez.
- *
- * @returns {Promise<Question|null>}
- *   Question: { id, code_snippet, options: string[], difficulty }
+ * Bir sonraki soruyu döner.
+ * Önce önbellekten alır (0ms), kuyruk boşsa Edge Function'dan çeker.
  */
 export async function getNextQuestion() {
+    // Kuyrukta hazır soru var mı?
+    if (questionQueue.length > 0) {
+        const q = questionQueue.shift();
+        // Arka planda yeni sorular yükle
+        _prefetchQuestions();
+        return q;
+    }
+
+    // Kuyruk boş — doğrudan çek (ilk soru veya prefetch yetişmedi)
     const token = await _getToken();
-    if (!token) {
-        console.error('[questions] Oturum tokeni alınamadı.');
-        return null;
+    if (!token) { console.error('[questions] Token alınamadı.'); return null; }
+
+    const q = await _fetchOne(token, currentDifficulty, [...seenIds]);
+    if (q) {
+        seenIds.add(q.id);
+        // Arka planda sonraki soruları hazırla
+        _prefetchQuestions();
     }
-
-    const response = await fetch(GET_QUESTION_URL, {
-        method  : 'POST',
-        headers : {
-            'Content-Type'  : 'application/json',
-            'Authorization' : `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            difficulty : currentDifficulty,
-            seen_ids   : [...seenIds],      // Görülen soruları gönder (tekrar gelmesin)
-        }),
-    });
-
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        console.error('[questions] get-question hatası:', err.error ?? response.status);
-        return null;
-    }
-
-    const question = await response.json();
-
-    // Görüldü olarak işaretle
-    seenIds.add(question.id);
-
-    return question;   // { id, code_snippet, options, difficulty }
+    return q;
 }
 
-/**
- * Seçilen cevabı Edge Function üzerinden sunucuda doğrular.
- * correct_lang asla istemci tarafında kontrol edilmez.
- *
- * @param {number} questionId   - Soru ID'si
- * @param {string} selectedLang - Seçilen dil
- * @returns {Promise<{ correct: boolean, correct_lang: string } | null>}
- */
 export async function checkAnswer(questionId, selectedLang) {
     const token = await _getToken();
     if (!token) return null;
 
     const response = await fetch(CHECK_ANSWER_URL, {
-        method  : 'POST',
-        headers : {
-            'Content-Type'  : 'application/json',
-            'Authorization' : `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-            question_id   : questionId,
-            selected_lang : selectedLang,
-        }),
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body   : JSON.stringify({ question_id: questionId, selected_lang: selectedLang }),
     });
 
     if (!response.ok) {
@@ -140,74 +103,91 @@ export async function checkAnswer(questionId, selectedLang) {
         console.error('[questions] check-answer hatası:', err.error ?? response.status);
         return null;
     }
-
-    return await response.json();   // { correct, correct_lang }
+    return response.json();
 }
 
-/**
- * Düello modunda seed ile soru listesi çeker.
- * Her çağrı get-question'ı kullanır; seed client'ta LCG ile uygulanır.
- * (Sunucu sıralamayı bilmez — sadece görülmemiş sorular gelir)
- *
- * @param {number} seed
- * @param {number} count
- * @returns {Promise<Question[]>}
- */
 export async function getDuelQuestions(seed, count = 15) {
-    const questions = [];
-    const localSeen = new Set();
-
-    // Token bir kez al — 15 istek için tekrar tekrar getSession() çağırma
-    const token = await _getToken();
+    const questions  = [];
+    const localSeen  = new Set();
+    const token      = await _getToken();
     if (!token) return [];
 
     for (let i = 0; i < count; i++) {
         const difficulty = i < 5 ? 1 : i < 10 ? 3 : 5;
-
-        const response = await fetch(GET_QUESTION_URL, {
-            method  : 'POST',
-            headers : {
-                'Content-Type'  : 'application/json',
-                'Authorization' : `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                difficulty,
-                seen_ids: [...localSeen],
-            }),
-        });
-
-        if (!response.ok) break;
-
-        const q = await response.json();
+        const q = await _fetchOne(token, difficulty, [...localSeen]);
+        if (!q) break;
         localSeen.add(q.id);
         questions.push(q);
     }
-
     return _seededShuffle(questions, seed);
 }
 
 // ─── Özel Yardımcı Fonksiyonlar ────────────────────────────────
 
 /**
- * Mevcut oturum JWT token'ını döner.
- * @returns {Promise<string|null>}
- * @private
+ * Arka planda PREFETCH_SIZE kadar soru yükler ve kuyruğa ekler.
+ * Oyun başlangıcında da dışarıdan çağrılabilmesi için export edildi.
  */
+export async function _prefetchQuestions() {
+    if (isPrefetching) return;
+    if (questionQueue.length >= PREFETCH_SIZE) return;
+
+    isPrefetching = true;
+    const token = await _getToken();
+    if (!token) { isPrefetching = false; return; }
+
+    const needed = PREFETCH_SIZE - questionQueue.length;
+    const allSeen = new Set([...seenIds, ...questionQueue.map(q => q.id)]);
+
+    // Paralel fetch — tek tek değil aynı anda
+    const fetches = Array.from({ length: needed }, () =>
+        _fetchOne(token, currentDifficulty, [...allSeen])
+    );
+
+    const results = await Promise.all(fetches);
+    for (const q of results) {
+        if (q && !allSeen.has(q.id)) {
+            allSeen.add(q.id);
+            questionQueue.push(q);
+        }
+    }
+
+    isPrefetching = false;
+}
+
+/**
+ * Edge Function'dan tek soru çeker.
+ */
+async function _fetchOne(token, difficulty, seenArr) {
+    try {
+        const response = await fetch(GET_QUESTION_URL, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body   : JSON.stringify({ difficulty, seen_ids: seenArr }),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            console.error('[questions] get-question hatası:', err.error ?? response.status);
+            return null;
+        }
+        const q = await response.json();
+        return q;
+    } catch (err) {
+        console.error('[questions] fetch hatası:', err);
+        return null;
+    }
+}
+
 async function _getToken() {
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token ?? null;
 }
 
-/**
- * Seed tabanlı LCG karıştırma — düello senkronizasyonu için.
- * @private
- */
 function _seededShuffle(arr, seed) {
     const copy = [...arr];
     let s = seed;
     const a = 1664525, c = 1013904223, m = 2 ** 32;
     const rand = () => { s = (a * s + c) % m; return s / m; };
-
     for (let i = copy.length - 1; i > 0; i--) {
         const j = Math.floor(rand() * (i + 1));
         [copy[i], copy[j]] = [copy[j], copy[i]];

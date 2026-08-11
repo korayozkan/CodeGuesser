@@ -29,6 +29,7 @@ import {
     resetQuestions,
     getDifficulty,
     registerCorrectAnswer,
+    _prefetchQuestions as _prefetchStart,
 } from './questions.js';
 
 import {
@@ -157,8 +158,9 @@ export async function startGame() {
     state = _createInitialState();
     state.isRunning = true;
 
-    // Soru motorunu sıfırla
+    // Soru motorunu sıfırla ve arka planda ilk soruları önceden yükle
     resetQuestions();
+    _prefetchStart();
 
     // Ekranı göster
     showScreen(gameScreen);
@@ -454,31 +456,35 @@ async function _saveScore() {
     const newTitle = getTitleForScore(newTotal, TITLE_THRESHOLDS);
 
     // profiles tablosunu güncelle
-    await supabase
+    const { error: profileErr } = await supabase
         .from('profiles')
-        .update({
-            score : newTotal,
-            title : newTitle,
-        })
+        .update({ score: newTotal, title: newTitle })
         .eq('id', user.id);
 
-    // leaderboard: max_score'u güncelle (sadece daha yüksekse)
-    const { data: lbRow } = await supabase
-        .from('leaderboard')
-        .select('max_score')
-        .eq('user_id', user.id)
-        .single();
+    if (profileErr) {
+        console.error('[game] Profil skoru kaydedilemedi:', profileErr.message);
+    }
 
-    const currentMax = lbRow?.max_score ?? 0;
-    if (newTotal > currentMax) {
-        await supabase
-            .from('leaderboard')
-            .update({
-                max_score  : newTotal,
-                title      : newTitle,
-                updated_at : new Date().toISOString(),
-            })
-            .eq('user_id', user.id);
+    // leaderboard: upsert ile max_score güncelle
+    // .single() yerine upsert — satır yoksa oluşturur, varsa günceller
+    const { error: lbErr } = await supabase
+        .from('leaderboard')
+        .upsert(
+            {
+                user_id   : user.id,
+                username  : profile?.username ?? 'Bilinmiyor',
+                max_score : newTotal,
+                title     : newTitle,
+                updated_at: new Date().toISOString(),
+            },
+            {
+                onConflict     : 'user_id',
+                ignoreDuplicates: false,
+            }
+        );
+
+    if (lbErr) {
+        console.error('[game] Leaderboard skoru kaydedilemedi:', lbErr.message);
     }
 }
 
