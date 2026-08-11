@@ -199,22 +199,25 @@
      ╚══════════════════════════════════════════════╝ -->
 <div id="game-screen" class="screen">
 
-    <!-- Üst HUD: Can + Puan + Seri -->
+    <!-- Law #1 Hick: Sol üst minimal çıkış ikonu -->
+    <button id="btn-quit-game" class="btn-quit-minimal" title="Oyundan Çık" aria-label="Oyundan Çık">✕</button>
+
+    <!-- Üst HUD — Chunking #16: Sol=Can | Orta=Puan | Sağ=Seri -->
     <div class="game-hud">
-        <!-- Can göstergesi -->
+        <!-- Sol: Can -->
         <div id="lives-display" class="lives-display" role="img" aria-label="Canlar">
             <span class="heart" data-life="1">❤️</span>
             <span class="heart" data-life="2">❤️</span>
             <span class="heart" data-life="3">❤️</span>
         </div>
 
-        <!-- Puan -->
+        <!-- Orta: Puan -->
         <div class="hud-center">
             <span class="hud-label">PUAN</span>
             <span id="score-display" class="hud-value">0</span>
         </div>
 
-        <!-- Streak göstergesi -->
+        <!-- Sağ: Seri -->
         <div class="hud-right">
             <span class="hud-label">SERİ</span>
             <span id="streak-display" class="hud-value streak-value">0🔥</span>
@@ -229,9 +232,8 @@
         <span id="timer-text" class="timer-text">15</span>
     </div>
 
-    <!-- Zorluk seviyesi -->
-    <div class="difficulty-indicator">
-        <span class="difficulty-label">SEVİYE</span>
+    <!-- Zorluk + Soru meta (birleşik şerit) -->
+    <div class="question-meta">
         <div id="difficulty-stars" class="difficulty-stars">
             <span class="star active">★</span>
             <span class="star">★</span>
@@ -239,10 +241,6 @@
             <span class="star">★</span>
             <span class="star">★</span>
         </div>
-    </div>
-
-    <!-- Soru numarası -->
-    <div class="question-counter">
         <span id="question-number" class="q-number">Soru #1</span>
         <span id="question-difficulty-text" class="q-diff-text">Kolay</span>
     </div>
@@ -267,27 +265,24 @@
         <button class="btn btn-option" data-index="2"></button>
     </div>
 
-    <!-- Joker butonları -->
+    <!-- Jokerler — Fitts #2 (≥48px), Serial Position #8 (50/50 sol, Skip sağ), Paradox #14 tooltip -->
     <div class="jokers-row">
-        <button id="joker-fifty" class="btn btn-joker" title="50/50: Bir yanlış şıkkı kaldır" aria-label="50/50 joker">
+        <button id="joker-fifty"  class="btn btn-joker" data-tooltip="Bir yanlış şıkkı kaldırır" aria-label="50/50 joker">
             <span class="joker-btn-icon">✂️</span>
             <span class="joker-btn-label">50/50</span>
-            <span id="joker-fifty-count" class="joker-btn-count">0</span>
+            <span id="joker-fifty-count"  class="joker-btn-count">0</span>
         </button>
-        <button id="joker-freeze" class="btn btn-joker" title="Dondur: Sayacı 5s durdur" aria-label="Dondur joker">
+        <button id="joker-freeze" class="btn btn-joker" data-tooltip="Sayacı 5 sn dondurur" aria-label="Dondur joker">
             <span class="joker-btn-icon">🧊</span>
             <span class="joker-btn-label">Dondur</span>
             <span id="joker-freeze-count" class="joker-btn-count">0</span>
         </button>
-        <button id="joker-skip" class="btn btn-joker" title="Pas Geç: Can kaybetmeden atla" aria-label="Pas geç joker">
+        <button id="joker-skip"   class="btn btn-joker" data-tooltip="Can kaybetmeden atla" aria-label="Pas geç joker">
             <span class="joker-btn-icon">⏭️</span>
             <span class="joker-btn-label">Pas Geç</span>
-            <span id="joker-skip-count" class="joker-btn-count">0</span>
+            <span id="joker-skip-count"   class="joker-btn-count">0</span>
         </button>
     </div>
-
-    <!-- Oyundan çık butonu -->
-    <button id="btn-quit-game" class="btn btn-quit">✕ Oyundan Çık</button>
 </div>
 
 <!-- ╔══════════════════════════════════════════════╗

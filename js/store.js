@@ -178,31 +178,29 @@ function _buildStoreCard(item) {
     if (owned)      card.classList.add('owned');
     if (isEquipped) card.classList.add('equipped');
 
-    // Fiyat metni
-    const priceText = item.price === 0 ? 'Ücretsiz' : `${item.price} 💎`;
+    const priceText  = item.price === 0 ? 'Ücretsiz' : `${item.price} 💎`;
     const priceClass = item.price === 0 ? 'store-item__price free' : 'store-item__price';
 
-    // Buton durumu
-    let btnLabel = 'Satın Al';
+    let btnLabel    = 'Satın Al';
     let btnDisabled = '';
     if (owned && item.type !== 'joker') {
-        btnLabel    = isEquipped ? 'Takılı ✓' : 'Tak';
+        btnLabel    = isEquipped ? '✓ Takılı' : 'Tak';
         btnDisabled = isEquipped ? 'disabled' : '';
     }
 
+    /* Law #13 Connectedness: fiyat + buton tek footer bileşeni */
     card.innerHTML = `
-        <span class="store-item__icon">${item.icon}</span>
-        <span class="store-item__name">${_escHtml(item.name)}</span>
-        <span class="${priceClass}">${priceText}</span>
-        <button class="btn btn-primary store-item__btn" ${btnDisabled}>
-            ${btnLabel}
-        </button>
+        <div class="store-item__body">
+            <span class="store-item__icon">${item.icon}</span>
+            <span class="store-item__name">${_escHtml(item.name)}</span>
+        </div>
+        <div class="store-item__footer">
+            <span class="${priceClass}">${priceText}</span>
+            <button class="store-item__btn" ${btnDisabled}>${btnLabel}</button>
+        </div>
     `;
 
-    // Buton tıklama
-    const btn = card.querySelector('.store-item__btn');
-    btn.addEventListener('click', () => _handlePurchase(item, card));
-
+    card.querySelector('.store-item__btn').addEventListener('click', () => _handlePurchase(item, card));
     return card;
 }
 
@@ -391,7 +389,7 @@ function _refreshCard(card, item) {
     card.classList.toggle('equipped', isEquipped);
 
     if (owned && item.type !== 'joker') {
-        btn.textContent = isEquipped ? 'Takılı ✓' : 'Tak';
+        btn.textContent = isEquipped ? '✓ Takılı' : 'Tak';
         btn.disabled    = isEquipped;
     } else {
         btn.disabled = false;
