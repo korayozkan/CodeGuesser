@@ -78,11 +78,9 @@ CREATE POLICY "duels_update_participants"
 -- QUESTIONS politikaları
 -- ============================================================
 
--- Tüm giriş yapmış kullanıcılar soruları okuyabilir
-CREATE POLICY "questions_select_authenticated"
-    ON public.questions FOR SELECT
-    TO authenticated
-    USING (true);
+-- İstemci tarafı doğrudan erişim tamamen kapalı.
+-- Sorular yalnızca get-question Edge Function (service_role) üzerinden okunur.
+-- Bu sayede correct_lang ve soru bankası istemcide asla görünmez.
 
--- Sorular yalnızca Supabase Dashboard / servis rolüyle eklenir
--- (İstemci tarafından insert/update/delete yasak)
+-- Eski "authenticated" policy'yi kaldır (varsa)
+DROP POLICY IF EXISTS "questions_select_authenticated" ON public.questions;

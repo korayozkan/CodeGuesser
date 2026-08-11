@@ -4,6 +4,7 @@
 js/config.js
 
 # Soru bankası — oyun içeriği, sende kalmalı
+# (Sorular Edge Function içinde sunucu tarafında tutuluyor)
 supabase/migrations/003_seed_questions.sql
 
 # Ortam dosyaları

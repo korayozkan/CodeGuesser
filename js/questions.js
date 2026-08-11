@@ -1,30 +1,34 @@
 /**
  * questions.js
  * ──────────────────────────────────────────────────────────────
- * Soru bankasını Supabase'den çeker, zorluk artış algoritmasını
- * yönetir ve oyuna hazır soru nesneleri sağlar.
+ * Soru bankasına istemci tarafından doğrudan erişilmez.
+ * Tüm soru çekme ve cevap doğrulama işlemleri Supabase Edge
+ * Function'lar üzerinden yapılır:
  *
- * Zorluk Artış Mantığı:
- *   - Her DIFFICULTY_STEP_INTERVAL doğru cevapta zorluk 1 artar.
- *   - Maksimum zorluk 5'tir.
- *   - Aynı soru aynı oyun içinde iki kez gelmez (seen seti ile).
+ *   GET  soru   → Edge Function: get-question
+ *   POST cevap  → Edge Function: check-answer
+ *
+ * Bu sayede:
+ *   - correct_lang hiçbir zaman tarayıcıya gelmez
+ *   - Soru bankası istemciden tamamen gizlenir
+ *   - RLS'de questions tablosu istemciye kapalıdır
  * ──────────────────────────────────────────────────────────────
  */
 
-import { supabase }  from './config.js';
-import { shuffle }   from './ui-utils.js';
+import { supabase, SUPABASE_URL } from './config.js';
+import { shuffle }                from './ui-utils.js';
+
+// ─── Edge Function URL'leri ────────────────────────────────────
+// SUPABASE_URL örn: https://thvzcnmiwekudevxjnfg.supabase.co
+const EDGE_BASE        = `${SUPABASE_URL}/functions/v1`;
+const GET_QUESTION_URL = `${EDGE_BASE}/get-question`;
+const CHECK_ANSWER_URL = `${EDGE_BASE}/check-answer`;
 
 // ─── Sabitler ──────────────────────────────────────────────────
 /** Kaç doğru cevapta bir zorluk seviyesi artar */
 const DIFFICULTY_STEP_INTERVAL = 3;
 
-/** Bir önbellekte tutulacak maksimum soru sayısı */
-const CACHE_SIZE = 20;
-
-// ─── Modül durumu ──────────────────────────────────────────────
-/** Tüm çekilen sorular önbelleği { zorluk → Question[] } */
-const questionCache = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-
+// ─── Modül Durumu ──────────────────────────────────────────────
 /** Bu oyun oturumunda gösterilen soru id'leri */
 const seenIds = new Set();
 
@@ -43,7 +47,6 @@ export function resetQuestions() {
     seenIds.clear();
     currentDifficulty = 1;
     correctInLevel    = 0;
-    // Önbelleği koru — Supabase'e gereksiz istek atmamak için
 }
 
 /**
@@ -61,159 +64,151 @@ export function getDifficulty() {
  */
 export function registerCorrectAnswer() {
     correctInLevel++;
-
     if (correctInLevel >= DIFFICULTY_STEP_INTERVAL && currentDifficulty < 5) {
         currentDifficulty++;
         correctInLevel = 0;
-        return true;   // Zorluk arttı
+        return true;
     }
     return false;
 }
 
 /**
- * Mevcut zorluk seviyesine uygun bir sonraki soruyu döner.
- * Önce önbellekten alır; önbellekte uygun soru yoksa Supabase'den çeker.
+ * Edge Function'dan bir sonraki soruyu çeker.
+ * correct_lang sunucuda kalır, istemciye gelmez.
  *
  * @returns {Promise<Question|null>}
- *   Question: { id, code_snippet, correct_lang, options: string[], difficulty }
- *   Uygun soru bulunamazsa null döner.
+ *   Question: { id, code_snippet, options: string[], difficulty }
  */
 export async function getNextQuestion() {
-    // Önbellekten görülmemiş soru bul
-    const cached = _pickFromCache(currentDifficulty);
-    if (cached) return cached;
+    const token = await _getToken();
+    if (!token) {
+        console.error('[questions] Oturum tokeni alınamadı.');
+        return null;
+    }
 
-    // Önbellekte yok → Supabase'den çek
-    await _fetchQuestions(currentDifficulty);
+    const response = await fetch(GET_QUESTION_URL, {
+        method  : 'POST',
+        headers : {
+            'Content-Type'  : 'application/json',
+            'Authorization' : `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            difficulty : currentDifficulty,
+            seen_ids   : [...seenIds],      // Görülen soruları gönder (tekrar gelmesin)
+        }),
+    });
 
-    // Tekrar dene
-    const afterFetch = _pickFromCache(currentDifficulty);
-    if (afterFetch) return afterFetch;
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('[questions] get-question hatası:', err.error ?? response.status);
+        return null;
+    }
 
-    // Bu seviyede soru kalmadıysa bir alt seviyeden al (fallback)
-    return _fallbackQuestion();
+    const question = await response.json();
+
+    // Görüldü olarak işaretle
+    seenIds.add(question.id);
+
+    return question;   // { id, code_snippet, options, difficulty }
 }
 
 /**
- * Düello modunda belirli bir seed ile tekrarlanabilir soru listesi üretir.
- * İki oyuncu aynı seed'i kullanarak aynı soruları alır.
+ * Seçilen cevabı Edge Function üzerinden sunucuda doğrular.
+ * correct_lang asla istemci tarafında kontrol edilmez.
  *
- * @param {number} seed  - Düello odası ID'sinden türetilen sayı
- * @param {number} count - Kaç soru çekilecek
+ * @param {number} questionId   - Soru ID'si
+ * @param {string} selectedLang - Seçilen dil
+ * @returns {Promise<{ correct: boolean, correct_lang: string } | null>}
+ */
+export async function checkAnswer(questionId, selectedLang) {
+    const token = await _getToken();
+    if (!token) return null;
+
+    const response = await fetch(CHECK_ANSWER_URL, {
+        method  : 'POST',
+        headers : {
+            'Content-Type'  : 'application/json',
+            'Authorization' : `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            question_id   : questionId,
+            selected_lang : selectedLang,
+        }),
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('[questions] check-answer hatası:', err.error ?? response.status);
+        return null;
+    }
+
+    return await response.json();   // { correct, correct_lang }
+}
+
+/**
+ * Düello modunda seed ile soru listesi çeker.
+ * Her çağrı get-question'ı kullanır; seed client'ta LCG ile uygulanır.
+ * (Sunucu sıralamayı bilmez — sadece görülmemiş sorular gelir)
+ *
+ * @param {number} seed
+ * @param {number} count
  * @returns {Promise<Question[]>}
  */
 export async function getDuelQuestions(seed, count = 15) {
-    // Tüm zorluk seviyelerinden eşit dağılımlı soru çek
-    const { data, error } = await supabase
-        .from('questions')
-        .select('id, code_snippet, correct_lang, options, difficulty')
-        .order('id', { ascending: true })
-        .limit(count * 3);   // Fazla çek, seed ile filtrele
+    const questions = [];
+    const localSeen = new Set();
 
-    if (error || !data) return [];
+    for (let i = 0; i < count; i++) {
+        const token = await _getToken();
+        if (!token) break;
 
-    // Seed tabanlı deterministik karıştırma (LCG algoritması)
-    const shuffled = _seededShuffle(data, seed);
-    return shuffled.slice(0, count).map(_normalizeQuestion);
+        // Zorluk: ilk 5 kolay, ortа karışık, son 5 zor
+        const difficulty = i < 5 ? 1 : i < 10 ? 3 : 5;
+
+        const response = await fetch(GET_QUESTION_URL, {
+            method  : 'POST',
+            headers : {
+                'Content-Type'  : 'application/json',
+                'Authorization' : `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                difficulty,
+                seen_ids: [...localSeen],
+            }),
+        });
+
+        if (!response.ok) break;
+
+        const q = await response.json();
+        localSeen.add(q.id);
+        questions.push(q);
+    }
+
+    // Seed ile deterministik sıralama (iki oyuncunun aynı sırayı görmesi için)
+    return _seededShuffle(questions, seed);
 }
 
 // ─── Özel Yardımcı Fonksiyonlar ────────────────────────────────
 
 /**
- * Belirtilen zorluk önbelleğinden görülmemiş bir soru döner.
- * Uygun soru yoksa null döner.
+ * Mevcut oturum JWT token'ını döner.
+ * @returns {Promise<string|null>}
  * @private
  */
-function _pickFromCache(difficulty) {
-    const pool = questionCache[difficulty];
-    const unseen = pool.filter(q => !seenIds.has(q.id));
-    if (unseen.length === 0) return null;
-
-    // Rastgele seç
-    const question = unseen[Math.floor(Math.random() * unseen.length)];
-    seenIds.add(question.id);
-    return question;
+async function _getToken() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? null;
 }
 
 /**
- * Supabase'den belirtilen zorlukta CACHE_SIZE kadar soru çeker
- * ve önbelleğe ekler.
- * @private
- */
-async function _fetchQuestions(difficulty) {
-    const { data, error } = await supabase
-        .from('questions')
-        .select('id, code_snippet, correct_lang, options, difficulty')
-        .eq('difficulty', difficulty)
-        .limit(CACHE_SIZE);
-
-    if (error || !data) {
-        console.warn(`[questions] Zorluk ${difficulty} için soru çekilemedi:`, error?.message);
-        return;
-    }
-
-    // Önbelleğe ekle (tekrar ekleme yapma)
-    const existingIds = new Set(questionCache[difficulty].map(q => q.id));
-    const newQuestions = data
-        .filter(q => !existingIds.has(q.id))
-        .map(_normalizeQuestion);
-
-    questionCache[difficulty].push(...newQuestions);
-}
-
-/**
- * Mevcut zorlukta soru bulunamazsa, düşük zorluktan rastgele soru döner.
- * Tüm seviyeler boşsa null döner.
- * @private
- */
-function _fallbackQuestion() {
-    for (let lvl = currentDifficulty - 1; lvl >= 1; lvl--) {
-        const q = _pickFromCache(lvl);
-        if (q) return q;
-    }
-    return null;
-}
-
-/**
- * Ham Supabase satırını uygulama formatına normalize eder.
- * - options dizisini karıştırır (her görüntülemede farklı sıra)
- * @param {Object} row - Supabase sorgu satırı
- * @returns {Question}
- * @private
- */
-function _normalizeQuestion(row) {
-    return {
-        id           : row.id,
-        code_snippet : row.code_snippet,
-        correct_lang : row.correct_lang,
-        options      : shuffle(row.options),   // Şıkları karıştır
-        difficulty   : row.difficulty,
-    };
-}
-
-/**
- * Seed tabanlı deterministik dizi karıştırma — LCG (Linear Congruential Generator).
- * Aynı seed → aynı sıra garantisi verir.
- * Düello modunda her iki oyuncunun aynı soruları sırayla görmesini sağlar.
- *
- * @param {Array}  arr
- * @param {number} seed
- * @returns {Array}
+ * Seed tabanlı LCG karıştırma — düello senkronizasyonu için.
  * @private
  */
 function _seededShuffle(arr, seed) {
     const copy = [...arr];
     let s = seed;
-
-    // LCG parametreleri (Numerical Recipes)
-    const a = 1664525;
-    const c = 1013904223;
-    const m = 2 ** 32;
-
-    const rand = () => {
-        s = (a * s + c) % m;
-        return s / m;
-    };
+    const a = 1664525, c = 1013904223, m = 2 ** 32;
+    const rand = () => { s = (a * s + c) % m; return s / m; };
 
     for (let i = copy.length - 1; i > 0; i--) {
         const j = Math.floor(rand() * (i + 1));

@@ -25,6 +25,7 @@ import {
 
 import {
     getNextQuestion,
+    checkAnswer,
     resetQuestions,
     getDifficulty,
     registerCorrectAnswer,
@@ -245,22 +246,38 @@ async function _loadQuestion(isBonusOverride) {
 
 /**
  * Seçilen şık butonuna tıklandığında çağrılır.
- * Doğru/yanlış kontrolü yapar ve sonuca göre state'i günceller.
+ * Cevap doğruluğu sunucu tarafında (check-answer Edge Function) kontrol edilir.
  * @param {MouseEvent} e
  */
 async function _handleOptionClick(e) {
-    // Cevap zaten verildiyse veya tıklama kilitliyse işlem yapma
     if (state.isAnswerLocked || !state.isRunning) return;
     state.isAnswerLocked = true;
 
     _stopTimer();
 
     const selectedLang = e.currentTarget.dataset.lang;
-    const correct      = state.currentQuestion.correct_lang;
-    const isCorrect    = selectedLang === correct;
+    const questionId   = state.currentQuestion.id;
+
+    // Tüm butonları geçici olarak kilitle (sunucu cevabını beklerken)
+    optionButtons.forEach(btn => { btn.disabled = true; });
+
+    // ── Sunucuda cevabı doğrula ─────────────────────────────────
+    const result = await checkAnswer(questionId, selectedLang);
+
+    // Sunucu cevap veremezse (ağ hatası vb.) can düş, devam et
+    if (!result) {
+        showToast('Sunucuya ulaşılamadı, can kaybedildi.', 'error');
+        _processWrongAnswer();
+        if (state.lives <= 0) { await _endGame(true); return; }
+        setTimeout(() => _loadQuestion(false), 1000);
+        return;
+    }
+
+    const isCorrect   = result.correct;
+    const correctLang = result.correct_lang;   // Sunucudan geldi
 
     // Doğru/yanlış görsel geri bildirimi
-    _highlightAnswer(e.currentTarget, isCorrect, correct);
+    _highlightAnswer(e.currentTarget, isCorrect, correctLang);
     showAnswerEffect(isCorrect);
 
     if (isCorrect) {
@@ -269,22 +286,17 @@ async function _handleOptionClick(e) {
         _processWrongAnswer();
     }
 
-    // Can sıfırlandıysa oyunu bitir
     if (state.lives <= 0) {
         await _endGame(true);
         return;
     }
 
-    // 1 saniye bekle (kullanıcı sonucu görsün), sonraki soruya geç
     setTimeout(async () => {
         if (!state.isRunning) return;
-
-        // 5'li seri → bonus soru modalını göster
         if (state.streak > 0 && state.streak % STREAK_BONUS_TRIGGER === 0 && !state.isBonusQuestion) {
             openModal('bonus-modal');
-            return;   // Kullanıcı "Hazırım!" tıklayana kadar bekle
+            return;
         }
-
         await _loadQuestion(false);
     }, 1000);
 }
