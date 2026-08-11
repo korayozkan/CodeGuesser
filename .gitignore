@@ -1,0 +1,59 @@
+# ─── Gizli / Kişisel Dosyalar (GitHub'a gitmesin) ───────────────
+
+# Supabase bağlantı bilgileri — API key burada, ASLA commit'leme
+js/config.js
+
+# Soru bankası — oyun içeriği, sende kalmalı
+supabase/migrations/003_seed_questions.sql
+
+# Ortam dosyaları
+.env
+.env.local
+.env.*.local
+*.secret
+
+# ─── İşletim Sistemi ────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ─── Editör / IDE ───────────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.swo
+
+# Kiro IDE (kişisel oturum verileri hariç, steering/agents paylaşılabilir)
+.kiro/settings/
+
+# ─── Node (eğer ileride paket eklenir) ──────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ─── Build / Dist çıktıları ─────────────────────────────────────
+dist/
+build/
+out/
+
+# ─── Log dosyaları ──────────────────────────────────────────────
+*.log
+logs/

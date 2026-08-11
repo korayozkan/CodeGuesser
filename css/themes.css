@@ -1,0 +1,222 @@
+/* ============================================================
+   CodeGuesser — themes.css
+   Her tema CSS değişkenleri (custom properties) üzerinden
+   tanımlanır. Aktif tema <body> sınıfıyla belirlenir:
+     .theme-vscode-dark | .theme-matrix | .theme-cyberpunk
+   ============================================================ */
+
+/* ─── Paylaşılan boyut/şekil değişkenleri (tema bağımsız) ──── */
+:root {
+    --radius-sm : 4px;
+    --radius-md : 8px;
+    --radius-lg : 12px;
+    --radius-xl : 20px;
+
+    --shadow-card: 0 4px 24px rgba(0,0,0,0.25);
+
+    /* Geçiş süresi */
+    --transition-theme: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TEMA 1 — VS Code Dark  (varsayılan)
+   Referans: VS Code'un #1e1e1e tabanlı renk paleti
+   ══════════════════════════════════════════════════════════════ */
+.theme-vscode-dark {
+    /* Arka planlar */
+    --bg-primary  : #1e1e1e;
+    --bg-secondary: #252526;
+    --bg-tertiary : #2d2d30;
+    --bg-card     : #252526;
+    --bg-code     : #1e1e1e;
+
+    /* Metin */
+    --text-primary  : #d4d4d4;
+    --text-secondary: #9d9d9d;
+    --text-muted    : #6e6e6e;
+
+    /* Vurgu renkleri */
+    --accent-primary    : #569cd6;   /* VS Code mavi */
+    --accent-secondary  : #4ec9b0;   /* VS Code teal */
+    --accent-glow       : rgba(86,156,214,0.35);
+    --accent-glow-faint : rgba(86,156,214,0.12);
+
+    /* Sınır */
+    --border-color: #3e3e42;
+
+    /* Durum renkleri */
+    --success   : #4ec9b0;
+    --success-bg: rgba(78,201,176,0.12);
+    --danger    : #f44747;
+    --danger-bg : rgba(244,71,71,0.12);
+
+    /* Kod vurgu renkleri */
+    --code-text    : #d4d4d4;
+    --code-keyword : #569cd6;
+    --code-string  : #ce9178;
+    --code-number  : #b5cea8;
+    --code-comment : #6a9955;
+    --code-fn      : #dcdcaa;
+
+    /* Buton metin rengi */
+    --btn-text: #ffffff;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TEMA 2 — Matrix
+   Siyah arka plan üzerine yeşil terminal estetiği
+   ══════════════════════════════════════════════════════════════ */
+.theme-matrix {
+    --bg-primary  : #000000;
+    --bg-secondary: #0a0f0a;
+    --bg-tertiary : #0d170d;
+    --bg-card     : #0a0f0a;
+    --bg-code     : #010601;
+
+    --text-primary  : #00ff41;
+    --text-secondary: #00cc33;
+    --text-muted    : #006618;
+
+    --accent-primary    : #00ff41;
+    --accent-secondary  : #39ff14;
+    --accent-glow       : rgba(0,255,65,0.4);
+    --accent-glow-faint : rgba(0,255,65,0.1);
+
+    --border-color: #0d3b0d;
+
+    --success   : #39ff14;
+    --success-bg: rgba(57,255,20,0.10);
+    --danger    : #ff3300;
+    --danger-bg : rgba(255,51,0,0.10);
+
+    --code-text    : #00ff41;
+    --code-keyword : #39ff14;
+    --code-string  : #00cc33;
+    --code-number  : #00ff99;
+    --code-comment : #006618;
+    --code-fn      : #80ff00;
+
+    --btn-text: #000000;
+
+    /* Matrix'e özgü: Tüm metin monospace */
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Matrix tema için kod penceresi başlık çubuğu */
+.theme-matrix .code-window__titlebar {
+    background: #040d04;
+}
+
+/* Matrix glow efekti — başlıklara ve HUD'a */
+.theme-matrix .logo-icon,
+.theme-matrix .hud-value,
+.theme-matrix .score-value {
+    text-shadow: 0 0 10px rgba(0,255,65,0.8), 0 0 20px rgba(0,255,65,0.4);
+}
+
+/* Matrix yağmur arka plan animasyonu (isteğe bağlı hafif overlay) */
+.theme-matrix body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,65,0.015) 2px,
+        rgba(0,255,65,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TEMA 3 — Cyberpunk
+   Neon mor/sarı, koyu lacivert arka plan
+   ══════════════════════════════════════════════════════════════ */
+.theme-cyberpunk {
+    --bg-primary  : #0d0d1a;
+    --bg-secondary: #12122a;
+    --bg-tertiary : #1a1a3a;
+    --bg-card     : #14142b;
+    --bg-code     : #080818;
+
+    --text-primary  : #e8e8ff;
+    --text-secondary: #9898cc;
+    --text-muted    : #555588;
+
+    --accent-primary    : #ff00ff;   /* Neon mor */
+    --accent-secondary  : #ffff00;   /* Neon sarı */
+    --accent-glow       : rgba(255,0,255,0.45);
+    --accent-glow-faint : rgba(255,0,255,0.12);
+
+    --border-color: #2a2a5a;
+
+    --success   : #00ffcc;
+    --success-bg: rgba(0,255,204,0.10);
+    --danger    : #ff0055;
+    --danger-bg : rgba(255,0,85,0.10);
+
+    --code-text    : #e8e8ff;
+    --code-keyword : #ff00ff;
+    --code-string  : #ffff00;
+    --code-number  : #00ffcc;
+    --code-comment : #555588;
+    --code-fn      : #ff6ef7;
+
+    --btn-text: #0d0d1a;
+}
+
+/* Cyberpunk glow — vurgular */
+.theme-cyberpunk .logo-icon,
+.theme-cyberpunk .btn-primary,
+.theme-cyberpunk .joker-btn-count {
+    text-shadow: 0 0 8px rgba(255,0,255,0.9), 0 0 20px rgba(255,0,255,0.5);
+}
+
+.theme-cyberpunk .btn-primary {
+    box-shadow: 0 0 14px rgba(255,0,255,0.5), 0 0 28px rgba(255,0,255,0.25);
+}
+
+/* Cyberpunk scanline efekti */
+.theme-cyberpunk::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(255,0,255,0.018) 3px,
+        rgba(255,0,255,0.018) 6px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Cyberpunk köşe aksan çizgileri */
+.theme-cyberpunk .code-window {
+    border-color: #ff00ff;
+    box-shadow: 0 0 18px rgba(255,0,255,0.3);
+}
+
+.theme-cyberpunk .modal-card {
+    border-color: #ff00ff;
+    box-shadow: 0 0 30px rgba(255,0,255,0.25), 0 20px 60px rgba(0,0,0,0.6);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TEMA GEÇİŞİ — body sınıfı değiştiğinde akıcı geçiş
+   ══════════════════════════════════════════════════════════════ */
+body {
+    transition: var(--transition-theme);
+}
+
+/* Tüm tema değişkenlerini kullanan elementlere geçiş uygula */
+.btn, .modal-card, .code-window, .profile-card,
+.leaderboard-item, .store-item, .btn-joker, .toast {
+    transition: background-color 0.3s ease,
+                border-color 0.3s ease,
+                color 0.3s ease,
+                box-shadow 0.3s ease;
+}

@@ -1,0 +1,23 @@
+# Tüm metin dosyalarında satır sonlarını LF olarak normalize et
+# (Windows/Mac/Linux arasında tutarlılık sağlar)
+* text=auto eol=lf
+
+# Açıkça metin olarak işaret edilecekler
+*.html   text eol=lf
+*.css    text eol=lf
+*.js     text eol=lf
+*.json   text eol=lf
+*.sql    text eol=lf
+*.md     text eol=lf
+*.txt    text eol=lf
+*.yaml   text eol=lf
+*.yml    text eol=lf
+
+# İkili dosyalar — satır sonu dönüşümü yapma
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.woff   binary
+*.woff2  binary

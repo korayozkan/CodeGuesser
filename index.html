@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeGuesser</title>
+
+    <!-- Ana stiller -->
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/themes.css" />
+
+    <!-- Google Fonts: JetBrains Mono (kod) + Inter (UI) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+</head>
+
+<!-- Aktif tema body sınıfıyla uygulanır: theme-vscode-dark | theme-matrix | theme-cyberpunk -->
+<body class="theme-vscode-dark">
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  TOAST BİLDİRİM ALANI                        ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  EKRAN 1: KİMLİK DOĞRULAMA (Auth)            ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="auth-screen" class="screen active">
+    <div class="auth-card">
+        <!-- Logo ve başlık -->
+        <div class="auth-logo">
+            <span class="logo-icon">{ }</span>
+            <h1 class="logo-title">CodeGuesser</h1>
+            <p class="logo-sub">Dili tahmin et, zirveye çık.</p>
+        </div>
+
+        <!-- OAuth giriş butonları -->
+        <div class="auth-buttons">
+            <button id="btn-login-github" class="btn btn-oauth btn-github">
+                <!-- GitHub SVG ikonu -->
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+                </svg>
+                GitHub ile Giriş Yap
+            </button>
+
+            <button id="btn-login-google" class="btn btn-oauth btn-google">
+                <!-- Google SVG ikonu -->
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Google ile Giriş Yap
+            </button>
+        </div>
+
+        <p class="auth-disclaimer">Giriş yaparak Kullanım Koşullarını kabul etmiş olursunuz.</p>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  EKRAN 2: ANA MENÜ                           ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="menu-screen" class="screen">
+    <!-- Üst bar: profil + navigasyon -->
+    <header class="top-bar">
+        <div class="top-bar__brand">
+            <span class="logo-icon small">{ }</span>
+            <span class="logo-title small">CodeGuesser</span>
+        </div>
+        <nav class="top-bar__nav">
+            <button id="btn-open-leaderboard" class="btn btn-icon" title="Lider Tablosu" aria-label="Lider Tablosunu Aç">
+                🏆
+            </button>
+            <button id="btn-open-store" class="btn btn-icon" title="Mağaza" aria-label="Mağazayı Aç">
+                🛒
+            </button>
+            <button id="btn-logout" class="btn btn-icon" title="Çıkış Yap" aria-label="Çıkış Yap">
+                🚪
+            </button>
+        </nav>
+    </header>
+
+    <main class="menu-content">
+        <!-- Kullanıcı profil kartı -->
+        <div class="profile-card">
+            <div id="profile-avatar" class="avatar frame-default">
+                <span id="profile-initials">?</span>
+            </div>
+            <div class="profile-info">
+                <span id="profile-username" class="profile-username">Yükleniyor...</span>
+                <span id="profile-title" class="profile-title badge">Çaylak</span>
+            </div>
+            <div class="profile-score">
+                <span class="score-label">En Yüksek Skor</span>
+                <span id="profile-max-score" class="score-value">0</span>
+            </div>
+        </div>
+
+        <!-- Joker stok göstergesi -->
+        <div class="joker-stock-display">
+            <div class="joker-stock-item" title="50/50 Joker">
+                <span class="joker-icon">✂️</span>
+                <span id="stock-fifty" class="joker-count">0</span>
+            </div>
+            <div class="joker-stock-item" title="Dondur Joker">
+                <span class="joker-icon">🧊</span>
+                <span id="stock-freeze" class="joker-count">0</span>
+            </div>
+            <div class="joker-stock-item" title="Pas Geç Joker">
+                <span class="joker-icon">⏭️</span>
+                <span id="stock-skip" class="joker-count">0</span>
+            </div>
+        </div>
+
+        <!-- Ana aksiyon butonları -->
+        <div class="menu-actions">
+            <button id="btn-start-game" class="btn btn-primary btn-xl">
+                🎮 Oyna
+            </button>
+            <button id="btn-start-duel" class="btn btn-secondary btn-xl">
+                ⚔️ Düello
+            </button>
+        </div>
+
+        <!-- Günlük ödül butonu -->
+        <button id="btn-daily-reward" class="btn btn-reward">
+            🎁 Günlük Ödül Al
+        </button>
+    </main>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  EKRAN 3: OYUN ALANI                         ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="game-screen" class="screen">
+
+    <!-- Üst HUD: Can + Puan + Seri -->
+    <div class="game-hud">
+        <!-- Can göstergesi -->
+        <div id="lives-display" class="lives-display" role="img" aria-label="Canlar">
+            <span class="heart" data-life="1">❤️</span>
+            <span class="heart" data-life="2">❤️</span>
+            <span class="heart" data-life="3">❤️</span>
+        </div>
+
+        <!-- Puan -->
+        <div class="hud-center">
+            <span class="hud-label">PUAN</span>
+            <span id="score-display" class="hud-value">0</span>
+        </div>
+
+        <!-- Streak göstergesi -->
+        <div class="hud-right">
+            <span class="hud-label">SERİ</span>
+            <span id="streak-display" class="hud-value streak-value">0🔥</span>
+        </div>
+    </div>
+
+    <!-- Zamanlayıcı çubuğu -->
+    <div class="timer-wrapper" role="timer" aria-label="Kalan süre">
+        <div id="timer-bar" class="timer-bar">
+            <div id="timer-fill" class="timer-fill"></div>
+        </div>
+        <span id="timer-text" class="timer-text">15</span>
+    </div>
+
+    <!-- Zorluk seviyesi -->
+    <div class="difficulty-indicator">
+        <span class="difficulty-label">SEVİYE</span>
+        <div id="difficulty-stars" class="difficulty-stars">
+            <span class="star active">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+        </div>
+    </div>
+
+    <!-- Soru numarası -->
+    <div class="question-counter">
+        <span id="question-number" class="q-number">Soru #1</span>
+        <span id="question-difficulty-text" class="q-diff-text">Kolay</span>
+    </div>
+
+    <!-- Kod bloğu -->
+    <div class="code-container" role="region" aria-label="Kod parçası">
+        <div class="code-window">
+            <div class="code-window__titlebar">
+                <span class="dot dot--red"></span>
+                <span class="dot dot--yellow"></span>
+                <span class="dot dot--green"></span>
+                <span class="code-window__title">mystery.???</span>
+            </div>
+            <pre class="code-block"><code id="code-snippet" class="code-snippet">// Kod yükleniyor...</code></pre>
+        </div>
+    </div>
+
+    <!-- Cevap şıkları -->
+    <div id="options-container" class="options-container" role="group" aria-label="Cevap seçenekleri">
+        <button class="btn btn-option" data-index="0"></button>
+        <button class="btn btn-option" data-index="1"></button>
+        <button class="btn btn-option" data-index="2"></button>
+    </div>
+
+    <!-- Joker butonları -->
+    <div class="jokers-row">
+        <button id="joker-fifty" class="btn btn-joker" title="50/50: Bir yanlış şıkkı kaldır" aria-label="50/50 joker">
+            <span class="joker-btn-icon">✂️</span>
+            <span class="joker-btn-label">50/50</span>
+            <span id="joker-fifty-count" class="joker-btn-count">0</span>
+        </button>
+        <button id="joker-freeze" class="btn btn-joker" title="Dondur: Sayacı 5s durdur" aria-label="Dondur joker">
+            <span class="joker-btn-icon">🧊</span>
+            <span class="joker-btn-label">Dondur</span>
+            <span id="joker-freeze-count" class="joker-btn-count">0</span>
+        </button>
+        <button id="joker-skip" class="btn btn-joker" title="Pas Geç: Can kaybetmeden atla" aria-label="Pas geç joker">
+            <span class="joker-btn-icon">⏭️</span>
+            <span class="joker-btn-label">Pas Geç</span>
+            <span id="joker-skip-count" class="joker-btn-count">0</span>
+        </button>
+    </div>
+
+    <!-- Oyundan çık butonu -->
+    <button id="btn-quit-game" class="btn btn-quit">✕ Oyundan Çık</button>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  EKRAN 4: DÜELLO EKRANI                      ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="duel-screen" class="screen">
+    <div class="duel-container">
+        <h2 class="duel-title">⚔️ 1v1 Düello</h2>
+
+        <!-- Oda oluşturma / bekleme -->
+        <div id="duel-lobby" class="duel-lobby">
+            <div id="duel-waiting" class="duel-waiting hidden">
+                <p class="duel-info-text">Oda oluşturuldu! Linki arkadaşına gönder:</p>
+                <div class="duel-link-box">
+                    <input id="duel-link-input" type="text" class="duel-link-text" readonly aria-label="Düello linki" />
+                    <button id="btn-copy-duel-link" class="btn btn-secondary btn-sm">Kopyala</button>
+                </div>
+                <div class="duel-spinner">
+                    <div class="spinner"></div>
+                    <p>Rakip bekleniyor...</p>
+                </div>
+            </div>
+
+            <div id="duel-join-section">
+                <button id="btn-create-duel" class="btn btn-primary btn-xl">+ Oda Oluştur</button>
+                <div class="duel-or-divider"><span>veya</span></div>
+                <div class="duel-join-form">
+                    <input id="duel-id-input" type="text" class="input-field" placeholder="Düello ID gir..." aria-label="Düello ID" />
+                    <button id="btn-join-duel" class="btn btn-secondary">Katıl</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktif düello oyun alanı (mini HUD) -->
+        <div id="duel-game-area" class="duel-game-area hidden">
+            <div class="duel-scoreboard">
+                <div class="duel-player duel-player--self">
+                    <span id="duel-p1-name" class="duel-player-name">Sen</span>
+                    <span id="duel-p1-score" class="duel-player-score">0</span>
+                </div>
+                <div class="duel-vs">VS</div>
+                <div class="duel-player duel-player--opponent">
+                    <span id="duel-p2-name" class="duel-player-name">Rakip</span>
+                    <span id="duel-p2-score" class="duel-player-score">0</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-leave-duel" class="btn btn-quit">← Geri Dön</button>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  MODAL: OYUN SONU                            ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="game-over-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+        <div id="game-over-icon" class="game-over-icon">💀</div>
+        <h2 id="game-over-title" class="modal-title">Oyun Bitti!</h2>
+        <div class="game-over-stats">
+            <div class="stat-row">
+                <span class="stat-label">Toplam Puan</span>
+                <span id="final-score" class="stat-value accent">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Cevaplanan Soru</span>
+                <span id="final-questions" class="stat-value">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">En Uzun Seri</span>
+                <span id="final-streak" class="stat-value">0🔥</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Yeni Ünvan</span>
+                <span id="final-title" class="stat-value badge">—</span>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button id="btn-play-again" class="btn btn-primary">🔄 Tekrar Oyna</button>
+            <button id="btn-go-menu" class="btn btn-secondary">🏠 Ana Menü</button>
+        </div>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  MODAL: LİDER TABLOSU                        ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="leaderboard-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-card--wide">
+        <div class="modal-header">
+            <h2 id="leaderboard-title" class="modal-title">🏆 Lider Tablosu</h2>
+            <button class="btn btn-icon modal-close" data-modal="leaderboard-modal" aria-label="Kapat">✕</button>
+        </div>
+
+        <!-- Sekme: Tüm Zamanlar / Bu Hafta -->
+        <div class="leaderboard-tabs" role="tablist">
+            <button class="tab active" role="tab" data-tab="alltime" aria-selected="true">Tüm Zamanlar</button>
+            <button class="tab" role="tab" data-tab="weekly" aria-selected="false">Bu Hafta</button>
+        </div>
+
+        <!-- Üst 3 podyum -->
+        <div id="leaderboard-podium" class="leaderboard-podium">
+            <!-- JS tarafından doldurulur -->
+        </div>
+
+        <!-- Liste -->
+        <ol id="leaderboard-list" class="leaderboard-list">
+            <li class="leaderboard-loading">Yükleniyor...</li>
+        </ol>
+
+        <!-- Kullanıcının kendi sırası -->
+        <div id="my-rank-row" class="my-rank-row hidden">
+            <span class="my-rank-label">Senin sıran:</span>
+            <span id="my-rank-number" class="my-rank-number">#—</span>
+        </div>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  MODAL: MAĞAZA                               ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="store-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="store-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-card--wide">
+        <div class="modal-header">
+            <h2 id="store-title" class="modal-title">🛒 Mağaza</h2>
+            <button class="btn btn-icon modal-close" data-modal="store-modal" aria-label="Kapat">✕</button>
+        </div>
+
+        <!-- Mevcut puan -->
+        <div class="store-balance">
+            <span>💎 Puan Bakiyesi:</span>
+            <strong id="store-balance-value">0</strong>
+        </div>
+
+        <!-- Sekmeler: Jokerler / Çerçeveler / Temalar / Efektler -->
+        <div class="store-tabs" role="tablist">
+            <button class="tab active" role="tab" data-store-tab="jokers"  aria-selected="true">Jokerler</button>
+            <button class="tab" role="tab" data-store-tab="frames"  aria-selected="false">Çerçeveler</button>
+            <button class="tab" role="tab" data-store-tab="themes"  aria-selected="false">Temalar</button>
+            <button class="tab" role="tab" data-store-tab="effects" aria-selected="false">Efektler</button>
+        </div>
+
+        <!-- Ürün ızgarası -->
+        <div id="store-grid" class="store-grid">
+            <!-- JS tarafından doldurulur -->
+        </div>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  MODAL: BONUS SORU (Streak ödülü)            ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="bonus-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="bonus-title">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card modal-card--bonus">
+        <div class="bonus-burst">⚡</div>
+        <h2 id="bonus-title" class="modal-title">BONUS SORU!</h2>
+        <p class="bonus-desc">5'li seriyi yakaladın. Bu soruyu doğru bil, 3× puan kazan!</p>
+        <button id="btn-start-bonus" class="btn btn-primary">Hazırım!</button>
+    </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════╗
+     ║  DOĞRU/YANLIŞ CEVAP EFEKTİ KATMANı           ║
+     ╚══════════════════════════════════════════════╝ -->
+<div id="answer-effect" class="answer-effect hidden" aria-hidden="true">
+    <span id="answer-effect-icon"></span>
+</div>
+
+<!-- ============================================================
+     Uygulama giriş noktası — tüm modüller buradan yüklenir
+     ============================================================ -->
+<script src="js/main.js" type="module"></script>
+
+</body>
+</html>

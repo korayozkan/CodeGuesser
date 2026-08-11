@@ -1,0 +1,1006 @@
+/* ============================================================
+   CodeGuesser — main.css
+   Layout, butonlar, modallar, kart stilleri
+   Tema renkleri CSS değişkenleri (variables) üzerinden gelir
+   ============================================================ */
+
+/* ─── 1. RESET & TEMEL ─────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
+}
+
+/* ─── 2. EKRAN YÖNETİMİ (SPA) ──────────────────────────────── */
+.screen {
+    display: none;
+    width: 100%;
+    min-height: 100dvh;
+    animation: fadeIn 0.25s ease;
+}
+
+.screen.active {
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── 3. BUTONLAR ──────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+    user-select: none;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Birincil */
+.btn-primary {
+    background: var(--accent-primary);
+    color: var(--btn-text);
+    box-shadow: 0 4px 14px var(--accent-glow);
+}
+.btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 20px var(--accent-glow);
+    filter: brightness(1.1);
+}
+
+/* İkincil */
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+.btn-secondary:hover:not(:disabled) {
+    background: var(--bg-secondary);
+    border-color: var(--accent-primary);
+}
+
+/* XL boyut */
+.btn-xl {
+    padding: 0.85rem 2rem;
+    font-size: 1.1rem;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 320px;
+}
+
+/* Küçük */
+.btn-sm {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.85rem;
+}
+
+/* Sadece ikon */
+.btn-icon {
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+}
+.btn-icon:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+
+/* Çıkış/tehlike */
+.btn-quit {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    margin-top: 1rem;
+}
+.btn-quit:hover { background: var(--danger); color: #fff; }
+
+/* ─── 4. AUTH EKRANI ───────────────────────────────────────── */
+#auth-screen {
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    padding: 1.5rem;
+}
+
+.auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+}
+
+.auth-logo { margin-bottom: 2rem; }
+
+.logo-icon {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    text-shadow: 0 0 20px var(--accent-glow);
+}
+.logo-icon.small { font-size: 1.4rem; }
+
+.logo-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+.logo-title.small { font-size: 1.1rem; }
+
+.logo-sub {
+    margin-top: 0.4rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.btn-oauth {
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.btn-oauth:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.auth-disclaimer {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ─── 5. ÜST BAR & MENÜ EKRANI ────────────────────────────── */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.top-bar__brand { display: flex; align-items: center; gap: 0.4rem; }
+.top-bar__nav   { display: flex; align-items: center; gap: 0.25rem; }
+
+#menu-screen .menu-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Profil kartı */
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    width: 100%;
+    box-shadow: var(--shadow-card);
+}
+
+.avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    border: 3px solid var(--accent-primary);
+    box-shadow: 0 0 10px var(--accent-glow);
+    flex-shrink: 0;
+}
+
+/* Avatar çerçeve stilleri */
+.frame-gold   { border-color: #ffd700; box-shadow: 0 0 12px #ffd70088; }
+.frame-silver { border-color: #c0c0c0; box-shadow: 0 0 10px #c0c0c066; }
+.frame-neon   { border-color: #00ffcc; box-shadow: 0 0 14px #00ffcc88; }
+
+.profile-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.profile-username {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+.profile-title.badge {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--accent-primary);
+    color: var(--btn-text);
+    width: fit-content;
+}
+
+.profile-score {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+}
+.score-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.score-value { font-size: 1.4rem; font-weight: 700; color: var(--accent-secondary); font-family: 'JetBrains Mono', monospace; }
+
+/* Joker stok */
+.joker-stock-display {
+    display: flex;
+    gap: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem 1.5rem;
+    width: 100%;
+    justify-content: center;
+}
+.joker-stock-item { display: flex; align-items: center; gap: 0.4rem; }
+.joker-icon  { font-size: 1.3rem; }
+.joker-count { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }
+
+/* Menü aksiyon butonları */
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+}
+
+/* Günlük ödül */
+.btn-reward {
+    background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+    color: var(--btn-text);
+    border-radius: var(--radius-md);
+    padding: 0.7rem 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 14px var(--accent-glow);
+    animation: pulse-reward 2.5s infinite;
+}
+@keyframes pulse-reward {
+    0%, 100% { box-shadow: 0 4px 14px var(--accent-glow); }
+    50%       { box-shadow: 0 4px 28px var(--accent-glow), 0 0 0 4px var(--accent-glow-faint); }
+}
+
+/* ─── 6. OYUN EKRANI ───────────────────────────────────────── */
+#game-screen {
+    padding: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* HUD */
+.game-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.lives-display { display: flex; gap: 0.3rem; }
+.heart { font-size: 1.4rem; transition: filter 0.3s, opacity 0.3s; }
+.heart.lost { filter: grayscale(1); opacity: 0.35; }
+
+.hud-center, .hud-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+.hud-label { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.hud-value { font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+.streak-value { color: var(--accent-secondary); }
+
+/* Zamanlayıcı */
+.timer-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-secondary);
+}
+.timer-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.timer-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--accent-primary);
+    border-radius: 999px;
+    transition: width 1s linear, background-color 0.5s;
+    transform-origin: left;
+}
+/* Son 5 saniyede kırmızıya döner */
+.timer-fill.urgent { background: var(--danger); }
+.timer-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 2ch;
+    text-align: right;
+}
+
+/* Zorluk göstergesi */
+.difficulty-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+.difficulty-label { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.difficulty-stars  { display: flex; gap: 0.2rem; }
+.star { font-size: 1rem; color: var(--bg-tertiary); transition: color 0.3s; }
+.star.active { color: var(--accent-secondary); }
+
+/* Soru sayacı */
+.question-counter {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 1.25rem;
+    background: var(--bg-secondary);
+}
+.q-number    { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.q-diff-text { font-size: 0.85rem; color: var(--accent-secondary); font-weight: 600; }
+
+/* ─── 7. KOD BLOĞU ─────────────────────────────────────────── */
+.code-container {
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+}
+
+.code-window {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+}
+
+.code-window__titlebar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+}
+.dot--red    { background: #ff5f57; }
+.dot--yellow { background: #febc2e; }
+.dot--green  { background: #28c840; }
+
+.code-window__title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+}
+
+.code-block {
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-code);
+    overflow-x: auto;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+.code-snippet {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+    color: var(--code-text);
+    white-space: pre;
+    line-height: 1.6;
+    display: block;
+    width: 100%;
+}
+
+/* ─── 8. CEVAP ŞIKLARI ─────────────────────────────────────── */
+.options-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+}
+
+.btn-option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.15s;
+    text-align: center;
+}
+.btn-option:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+.btn-option.correct {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: var(--success);
+    animation: pop 0.3s ease;
+}
+.btn-option.wrong {
+    background: var(--danger-bg);
+    border-color: var(--danger);
+    color: var(--danger);
+    animation: shake 0.35s ease;
+}
+.btn-option.eliminated {
+    opacity: 0.2;
+    pointer-events: none;
+    transform: none;
+}
+
+@keyframes pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+}
+
+/* ─── 9. JOKER BUTONLARI ───────────────────────────────────── */
+.jokers-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0 1.25rem 1rem;
+}
+
+.btn-joker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 1rem;
+    min-width: 72px;
+    position: relative;
+    transition: all 0.2s;
+}
+.btn-joker:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+.btn-joker.active-freeze {
+    border-color: #60d4ff;
+    box-shadow: 0 0 16px #60d4ff66;
+    animation: freeze-pulse 1s infinite alternate;
+}
+@keyframes freeze-pulse {
+    from { box-shadow: 0 0 10px #60d4ff44; }
+    to   { box-shadow: 0 0 22px #60d4ffaa; }
+}
+.joker-btn-icon  { font-size: 1.3rem; }
+.joker-btn-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); }
+.joker-btn-count {
+    position: absolute;
+    top: -6px; right: -6px;
+    background: var(--accent-primary);
+    color: var(--btn-text);
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Buz efekti katmanı (freeze joker aktifken body'ye eklenir) */
+body.freeze-active::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    border: 4px solid #60d4ff;
+    border-radius: 4px;
+    box-shadow: inset 0 0 40px #60d4ff44;
+    pointer-events: none;
+    z-index: 9999;
+    animation: freeze-border 0.5s ease-in;
+}
+
+/* ─── 10. MODALLAR ─────────────────────────────────────────── */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal.hidden { display: none; }
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: slideUp 0.25s ease;
+    z-index: 1;
+}
+.modal-card--wide  { max-width: 600px; }
+.modal-card--bonus { max-width: 380px; text-align: center; }
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+.modal-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
+.modal-close { color: var(--text-muted); }
+.modal-close:hover { color: var(--danger); }
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+.modal-actions .btn { flex: 1; }
+
+/* ─── 11. OYUN SONU MODALI ─────────────────────────────────── */
+.game-over-icon { font-size: 3.5rem; text-align: center; margin-bottom: 0.5rem; }
+
+.game-over-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+}
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.stat-label { font-size: 0.9rem; color: var(--text-secondary); }
+.stat-value { font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+.stat-value.accent { color: var(--accent-primary); font-size: 1.5rem; }
+
+/* ─── 12. LİDER TABLOSU ─────────────────────────────────────── */
+.leaderboard-tabs, .store-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+.tab {
+    padding: 0.4rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.tab.active, .tab:hover {
+    background: var(--accent-primary);
+    color: var(--btn-text);
+}
+
+.leaderboard-podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    min-height: 80px;
+}
+.podium-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+.podium-rank  { font-size: 1.5rem; }
+.podium-name  { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.podium-score { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--accent-primary); }
+.podium-item--1 .podium-rank { font-size: 2rem; }
+
+.leaderboard-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 320px;
+    overflow-y: auto;
+}
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+.leaderboard-item:hover         { border-color: var(--border-color); }
+.leaderboard-item.is-current-user {
+    border-color: var(--accent-primary);
+    background: var(--bg-tertiary);
+}
+.lb-rank    { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); min-width: 28px; }
+.lb-name    { flex: 1; font-weight: 600; font-size: 0.9rem; }
+.lb-title   { font-size: 0.75rem; color: var(--accent-primary); }
+.lb-score   { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.95rem; color: var(--accent-secondary); }
+
+.my-rank-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    background: var(--accent-primary);
+    border-radius: var(--radius-md);
+    color: var(--btn-text);
+}
+.my-rank-label  { font-size: 0.9rem; font-weight: 600; }
+.my-rank-number { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.1rem; }
+.my-rank-row.hidden { display: none; }
+.leaderboard-loading { color: var(--text-muted); text-align: center; padding: 1rem; }
+
+/* ─── 13. MAĞAZA ───────────────────────────────────────────── */
+.store-balance {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+.store-balance strong { color: var(--accent-secondary); font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; }
+
+.store-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.85rem;
+    max-height: 340px;
+    overflow-y: auto;
+}
+.store-item {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 0.75rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    transition: border-color 0.2s, transform 0.15s;
+}
+.store-item:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+.store-item.owned { border-color: var(--success); opacity: 0.7; }
+.store-item.equipped { border-color: var(--accent-primary); box-shadow: 0 0 10px var(--accent-glow); }
+
+.store-item__icon  { font-size: 2rem; }
+.store-item__name  { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.store-item__price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-secondary);
+}
+.store-item__price.free { color: var(--success); }
+.store-item__btn {
+    width: 100%;
+    padding: 0.35rem;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+}
+
+/* ─── 14. DÜELLO EKRANI ─────────────────────────────────────── */
+#duel-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.duel-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 2rem;
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+}
+.duel-title { font-size: 1.5rem; font-weight: 700; text-align: center; }
+
+.duel-waiting { text-align: center; display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+.duel-info-text { color: var(--text-secondary); font-size: 0.95rem; }
+.duel-link-box {
+    display: flex; gap: 0.5rem; width: 100%;
+}
+.duel-link-text {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    outline: none;
+}
+.duel-spinner { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
+.spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.duel-or-divider {
+    position: relative; text-align: center; color: var(--text-muted);
+    font-size: 0.85rem; width: 100%;
+}
+.duel-or-divider::before, .duel-or-divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 42%; height: 1px; background: var(--border-color);
+}
+.duel-or-divider::before { left: 0; }
+.duel-or-divider::after  { right: 0; }
+
+.duel-join-form { display: flex; gap: 0.5rem; width: 100%; }
+.input-field {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.85rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+.input-field:focus { border-color: var(--accent-primary); }
+
+.duel-scoreboard {
+    display: flex; align-items: center; justify-content: space-around;
+    gap: 1rem; width: 100%; padding: 1rem;
+    background: var(--bg-secondary); border-radius: var(--radius-lg);
+}
+.duel-player { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+.duel-player-name  { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
+.duel-player-score { font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-primary); }
+.duel-vs { font-size: 1.1rem; font-weight: 700; color: var(--text-muted); }
+
+/* ─── 15. TOAST BİLDİRİMLER ────────────────────────────────── */
+#toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-primary);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: toast-in 0.3s ease forwards;
+    pointer-events: auto;
+}
+.toast.toast--success { border-left-color: var(--success); }
+.toast.toast--error   { border-left-color: var(--danger); }
+.toast.toast--info    { border-left-color: var(--accent-secondary); }
+.toast.toast--out     { animation: toast-out 0.3s ease forwards; }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(32px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(32px); }
+}
+
+/* ─── 16. CEVAP EFEKTİ ─────────────────────────────────────── */
+.answer-effect {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+.answer-effect.hidden { display: none; }
+#answer-effect-icon {
+    font-size: 6rem;
+    animation: effect-pop 0.5s ease forwards;
+}
+@keyframes effect-pop {
+    0%   { opacity: 0; transform: scale(0.5); }
+    40%  { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* ─── 17. BONUS MODAL ──────────────────────────────────────── */
+.bonus-burst {
+    font-size: 4rem;
+    animation: bonus-spin 0.6s ease;
+    display: block;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+@keyframes bonus-spin {
+    0%   { transform: rotate(-20deg) scale(0.5); opacity: 0; }
+    60%  { transform: rotate(10deg) scale(1.15); opacity: 1; }
+    100% { transform: rotate(0deg) scale(1); }
+}
+.bonus-desc { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem; }
+
+/* ─── 18. YARDIMCI SINIFLAR ─────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ─── 19. RESPONSIVE ────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .options-container { grid-template-columns: 1fr; }
+    .jokers-row { gap: 0.5rem; }
+    .btn-joker  { min-width: 60px; padding: 0.5rem 0.6rem; }
+    .modal-card { padding: 1.25rem; }
+    .store-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 641px) {
+    #game-screen {
+        margin: 2rem auto;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        max-height: calc(100dvh - 4rem);
+        overflow-y: auto;
+    }
+}
