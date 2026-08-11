@@ -1,0 +1,13 @@
+# robots.txt — CodeGuesser
+# https://korayozkan.github.io/CodeGuesser/
+
+# Tüm botlara izin ver
+User-agent: *
+Allow: /
+
+# Supabase config ve gizli dosyalara erişimi engelle
+Disallow: /js/config.js
+Disallow: /supabase/migrations/003_seed_questions.sql
+
+# Sitemap konumu
+Sitemap: https://korayozkan.github.io/CodeGuesser/sitemap.xml
