@@ -8,11 +8,11 @@
     "scheme": "codeguesser",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#020617",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -21,6 +21,7 @@
     },
     "web": {
       "output": "server",
+      "bundler": "metro",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -28,7 +29,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#020617",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
