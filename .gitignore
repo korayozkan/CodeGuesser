@@ -30,8 +30,10 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# local env files (Supabase ve gizli anahtarlar için)
+.env
+.env.*
+.env.local
 
 # typescript
 *.tsbuildinfo
@@ -41,3 +43,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Editor settings (VS Code)
+.vscode/
